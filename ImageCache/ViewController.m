@@ -96,10 +96,19 @@
     if (image) {
         cell.imageView.image = image;
     }else{
-        //设置占位图片
-        cell.imageView.image = [UIImage imageNamed:@"placeImage.png"];
         
-        [self downLoad:model.icon indexPath:indexPath];
+        //从沙盒中取出图片，没有数据。设置占位图，重新下载图片
+        NSString *file = [[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:[model.icon lastPathComponent]];
+        NSData *imgData = [NSData dataWithContentsOfFile:file];
+        
+        if (imgData) {
+            cell.imageView.image = [UIImage imageWithData:imgData];
+        }else{
+            //设置占位图片
+            cell.imageView.image = [UIImage imageNamed:@"placeImage.png"];
+            
+            [self downLoad:model.icon indexPath:indexPath];
+        }
     }
     return cell;
 }
@@ -120,12 +129,28 @@
                 //将图片添加入缓存字典中
                 if (image) {
                     blockSelf.images[imageUrl] = image;
+                    //将图片转化成二进制数据
+                    NSData *imgData = UIImagePNGRepresentation(image);
+                    //无损压缩;
+ //                    NSData *imgData = UIImageJPEGRepresentation(image, 1.0);
+                    
+                    //获取沙盒路径，
+                    //NSCachesDirectory 获取Caches文件夹
+                    //NSUserDomainMask  去当前用户文件中找
+                    NSString *caches = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
+                    //拼接文件路径
+                    NSString *fileName = [imageUrl lastPathComponent];
+                    NSString *file = [caches stringByAppendingPathComponent:fileName];
+                    
+                    //将图片写进文件夹
+                    [imgData writeToFile:file atomically:YES];
+
                 }
                 
                 //刷新单行的cell
                 [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
                 
-                //下载成功后，从字典中移除下载操作
+                //下载成功后，从字典中移除下载操作(1.防止字典越来越大，2.下载失败后可以重新下载)
                 [blockSelf.operations removeObjectForKey:imageUrl];
             }];
             
@@ -162,6 +187,7 @@
  7.当用户滑动tableView时，可以暂停下载，停止滑动之后恢复下载
  8.解决内存泄露问题。由于控制器对象对queue有强引用，queue内的NSBlockOperation对象对控制器又形成强引用。所以会造成内存泄露。
    并不是在block内使用self就会造成强引用，要看具体是否对控制器造成强引用
+ 9.将图片存进沙盒中。需要将图片转化成NSData数据。放入Library中的Caches文件夹
  
  */
 
