@@ -71,6 +71,17 @@
     [self.view addSubview:_tableView];
 }
 
+-(void)didReceiveMemoryWarning{
+    [super didReceiveMemoryWarning];
+    
+    //移除下载操作
+    [self.queue cancelAllOperations];
+    [self.operations removeAllObjects];
+    //清空字典数据
+    [self.images removeAllObjects];
+    
+}
+
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return self.modelArray.count;
 }
@@ -124,6 +135,15 @@
     return cell;
 }
 
+-(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView{
+    //暂停下载
+    [self.queue setSuspended:YES];
+}
+
+-(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{
+    //恢复下载
+    [self.queue setSuspended:NO];
+}
 /*
  1.将下载图片的耗时操作放在子线程去做，有数据后返回主线程设置UI
  2.如何防止重复下载操作，只需要保证一张图片只下载一次.
@@ -134,7 +154,8 @@
             2.重新创建一个字典，用来保存image。
  4.使用字典来放入缓存图片，如果有图片，直接设置，如果没有，查看是否有下载操作，如果没有，进行下载，下载成功后，将图片添加入images字典，从operations字典中移除
  5.如果当前图片没有下载，需要一张占位图片，图片下载完后刷新UI。
- 
+ 6.如果有内存警告，清空字典，移除所有下载操作
+ 7.当用户滑动tableView时，可以暂停下载，停止滑动之后恢复下载
  */
 
 
