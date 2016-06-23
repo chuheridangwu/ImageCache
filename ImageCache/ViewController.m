@@ -10,6 +10,8 @@
 #import "TableViewCell.h"
 #import "Model.h"
 
+#define appImgFile(imgUrl) [[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:[imgUrl lastPathComponent]]
+
 @interface ViewController ()<UITableViewDataSource,UITableViewDelegate>
 {
     UITableView *_tableView;
@@ -98,8 +100,7 @@
     }else{
         
         //从沙盒中取出图片，没有数据。设置占位图，重新下载图片
-        NSString *file = [[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:[model.icon lastPathComponent]];
-        NSData *imgData = [NSData dataWithContentsOfFile:file];
+        NSData *imgData = [NSData dataWithContentsOfFile:appImgFile(model.icon)];
         
         if (imgData) {
             cell.imageView.image = [UIImage imageWithData:imgData];
@@ -137,13 +138,13 @@
                     //获取沙盒路径，
                     //NSCachesDirectory 获取Caches文件夹
                     //NSUserDomainMask  去当前用户文件中找
-                    NSString *caches = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
-                    //拼接文件路径
-                    NSString *fileName = [imageUrl lastPathComponent];
-                    NSString *file = [caches stringByAppendingPathComponent:fileName];
+//                    NSString *caches = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
+//                    //拼接文件路径
+//                    NSString *fileName = [imageUrl lastPathComponent];
+//                    NSString *file = [caches stringByAppendingPathComponent:fileName];
                     
                     //将图片写进文件夹
-                    [imgData writeToFile:file atomically:YES];
+                    [imgData writeToFile:appImgFile(imageUrl) atomically:YES];
 
                 }
                 
