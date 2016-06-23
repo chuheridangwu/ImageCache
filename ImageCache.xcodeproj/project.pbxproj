@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A29D16011D1B797200C7DA23 /* placeImage@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A29D16001D1B797200C7DA23 /* placeImage@2x.png */; };
 		A2A883701D1AA4350023316C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A2A8836F1D1AA4350023316C /* main.m */; };
 		A2A883731D1AA4350023316C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A2A883721D1AA4350023316C /* AppDelegate.m */; };
 		A2A883761D1AA4350023316C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A2A883751D1AA4350023316C /* ViewController.m */; };
@@ -38,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A29D16001D1B797200C7DA23 /* placeImage@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "placeImage@2x.png"; sourceTree = "<group>"; };
 		A2A8836B1D1AA4350023316C /* ImageCache.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageCache.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2A8836F1D1AA4350023316C /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		A2A883711D1AA4350023316C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				A2A883751D1AA4350023316C /* ViewController.m */,
 				A2A883A11D1AA5250023316C /* TableViewCell.h */,
 				A2A883A21D1AA5250023316C /* TableViewCell.m */,
+				A29D16001D1B797200C7DA23 /* placeImage@2x.png */,
 				A2A883A61D1AA6530023316C /* Model.h */,
 				A2A883A71D1AA6530023316C /* Model.m */,
 				A2A883A41D1AA5CD0023316C /* apps.plist */,
@@ -260,6 +263,7 @@
 				A2A8837E1D1AA4350023316C /* LaunchScreen.storyboard in Resources */,
 				A2A8837B1D1AA4350023316C /* Assets.xcassets in Resources */,
 				A2A883791D1AA4350023316C /* Main.storyboard in Resources */,
+				A29D16011D1B797200C7DA23 /* placeImage@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -514,6 +518,7 @@
 				A2A8839A1D1AA4350023316C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A2A8839B1D1AA4350023316C /* Build configuration list for PBXNativeTarget "ImageCacheTests" */ = {
 			isa = XCConfigurationList;
@@ -522,6 +527,7 @@
 				A2A8839D1D1AA4350023316C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A2A8839E1D1AA4350023316C /* Build configuration list for PBXNativeTarget "ImageCacheUITests" */ = {
 			isa = XCConfigurationList;
@@ -530,6 +536,7 @@
 				A2A883A01D1AA4350023316C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -85,6 +85,9 @@
     if (image) {
         cell.imageView.image = image;
     }else{
+        //设置占位图片
+        cell.imageView.image = [UIImage imageNamed:@"placeImage.png"];
+        
         //取出当前图片URL对应的下载操作(operation对象)
         NSBlockOperation *operation = self.operations[model.icon];
         if (!operation) {
@@ -94,12 +97,14 @@
                 UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:url]];
                 //回到主线程
                 [[NSOperationQueue mainQueue]addOperationWithBlock:^{
-                    cell.imageView.image = image;
                     
                     //将图片添加入缓存字典中
                     if (image) {
                         self.images[model.icon] = image;
                     }
+                    
+                    //刷新单行的cell
+                    [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
                     
                     //下载成功后，从字典中移除下载操作
                     [self.operations removeObjectForKey:model.icon];
@@ -128,6 +133,7 @@
     解决办法:1.当图片下载成功后，从字典中移除下载操作
             2.重新创建一个字典，用来保存image。
  4.使用字典来放入缓存图片，如果有图片，直接设置，如果没有，查看是否有下载操作，如果没有，进行下载，下载成功后，将图片添加入images字典，从operations字典中移除
+ 5.如果当前图片没有下载，需要一张占位图片，图片下载完后刷新UI。
  
  */
 
