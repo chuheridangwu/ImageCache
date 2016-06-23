@@ -99,40 +99,43 @@
         //设置占位图片
         cell.imageView.image = [UIImage imageNamed:@"placeImage.png"];
         
-        //取出当前图片URL对应的下载操作(operation对象)
-        NSBlockOperation *operation = self.operations[model.icon];
-        if (!operation) {
-            //创建操作，下载图片
-            operation = [NSBlockOperation blockOperationWithBlock:^{
-                NSURL *url = [NSURL URLWithString:model.icon];
-                UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:url]];
-                //回到主线程
-                [[NSOperationQueue mainQueue]addOperationWithBlock:^{
-                    
-                    //将图片添加入缓存字典中
-                    if (image) {
-                        self.images[model.icon] = image;
-                    }
-                    
-                    //刷新单行的cell
-                    [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
-                    
-                    //下载成功后，从字典中移除下载操作
-                    [self.operations removeObjectForKey:model.icon];
-                }];
+        [self downLoad:model.icon indexPath:indexPath];
+    }
+    return cell;
+}
+
+- (void)downLoad:(NSString*)imageUrl indexPath:(NSIndexPath*)indexPath{
+    //取出当前图片URL对应的下载操作(operation对象)
+    NSBlockOperation *operation = self.operations[imageUrl];
+    
+    if (operation) return;
+        //创建操作，下载图片
+        operation = [NSBlockOperation blockOperationWithBlock:^{
+            NSURL *url = [NSURL URLWithString:imageUrl];
+            UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:url]];
+            //回到主线程
+            [[NSOperationQueue mainQueue]addOperationWithBlock:^{
                 
+                //将图片添加入缓存字典中
+                if (image) {
+                    self.images[imageUrl] = image;
+                }
+                
+                //刷新单行的cell
+                [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+                
+                //下载成功后，从字典中移除下载操作
+                [self.operations removeObjectForKey:imageUrl];
             }];
             
-            //添加操作到队列中
-            [self.queue addOperation:operation];
-            
-            //将下载操作添加到字典
-            self.operations[model.icon] = operation;
-        }
-    }
+        }];
+        
+        //添加操作到队列中
+        [self.queue addOperation:operation];
+        
+        //将下载操作添加到字典
+        self.operations[imageUrl] = operation;
    
-    
-    return cell;
 }
 
 -(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView{
