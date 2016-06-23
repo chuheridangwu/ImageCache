@@ -107,8 +107,9 @@
 - (void)downLoad:(NSString*)imageUrl indexPath:(NSIndexPath*)indexPath{
     //取出当前图片URL对应的下载操作(operation对象)
     NSBlockOperation *operation = self.operations[imageUrl];
-    
     if (operation) return;
+    
+    __weak typeof(self) blockSelf = self;
         //创建操作，下载图片
         operation = [NSBlockOperation blockOperationWithBlock:^{
             NSURL *url = [NSURL URLWithString:imageUrl];
@@ -118,14 +119,14 @@
                 
                 //将图片添加入缓存字典中
                 if (image) {
-                    self.images[imageUrl] = image;
+                    blockSelf.images[imageUrl] = image;
                 }
                 
                 //刷新单行的cell
                 [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
                 
                 //下载成功后，从字典中移除下载操作
-                [self.operations removeObjectForKey:imageUrl];
+                [blockSelf.operations removeObjectForKey:imageUrl];
             }];
             
         }];
@@ -159,6 +160,9 @@
  5.如果当前图片没有下载，需要一张占位图片，图片下载完后刷新UI。
  6.如果有内存警告，清空字典，移除所有下载操作
  7.当用户滑动tableView时，可以暂停下载，停止滑动之后恢复下载
+ 8.解决内存泄露问题。由于控制器对象对queue有强引用，queue内的NSBlockOperation对象对控制器又形成强引用。所以会造成内存泄露。
+   并不是在block内使用self就会造成强引用，要看具体是否对控制器造成强引用
+ 
  */
 
 
