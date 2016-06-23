@@ -19,6 +19,8 @@
 @property (nonatomic,strong)NSOperationQueue *queue;
 // 存放所有下载操作(url是key,operation对象是value)
 @property (nonatomic,strong)NSMutableDictionary *operations;
+// 存放所有下载完的图片
+@property (nonatomic,strong)NSMutableDictionary *images;
 @end
 
 @implementation ViewController
@@ -51,6 +53,13 @@
     return _operations;
 }
 
+- (NSMutableDictionary*)images{
+    if (!_images) {
+        _images = [NSMutableDictionary dictionary];
+    }
+    return _images;
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
@@ -71,26 +80,41 @@
     Model *model = self.modelArray[indexPath.row];
     cell.textLabel.text = model.name;
     
-    //取出当前图片URL对应的下载操作(operation对象)
-    NSBlockOperation *operation = self.operations[model.icon];
-    if (!operation) {
-        //创建操作，下载图片
-        operation = [NSBlockOperation blockOperationWithBlock:^{
-            NSURL *url = [NSURL URLWithString:model.icon];
-            UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:url]];
-            //回到主线程
-            [[NSOperationQueue mainQueue]addOperationWithBlock:^{
-                cell.imageView.image = image;
+    //从字典中取出缓存图片
+    UIImage *image = self.images[model.icon];
+    if (image) {
+        cell.imageView.image = image;
+    }else{
+        //取出当前图片URL对应的下载操作(operation对象)
+        NSBlockOperation *operation = self.operations[model.icon];
+        if (!operation) {
+            //创建操作，下载图片
+            operation = [NSBlockOperation blockOperationWithBlock:^{
+                NSURL *url = [NSURL URLWithString:model.icon];
+                UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:url]];
+                //回到主线程
+                [[NSOperationQueue mainQueue]addOperationWithBlock:^{
+                    cell.imageView.image = image;
+                    
+                    //将图片添加入缓存字典中
+                    if (image) {
+                        self.images[model.icon] = image;
+                    }
+                    
+                    //下载成功后，从字典中移除下载操作
+                    [self.operations removeObjectForKey:model.icon];
+                }];
+                
             }];
             
-        }];
-        
-        //添加操作到队列中
-        [self.queue addOperation:operation];
-        
-        //将下载操作添加到字典
-        self.operations[model.icon] = operation;
+            //添加操作到队列中
+            [self.queue addOperation:operation];
+            
+            //将下载操作添加到字典
+            self.operations[model.icon] = operation;
+        }
     }
+   
     
     return cell;
 }
@@ -99,7 +123,11 @@
  1.将下载图片的耗时操作放在子线程去做，有数据后返回主线程设置UI
  2.如何防止重复下载操作，只需要保证一张图片只下载一次.
    从字典中取出NSBlockOperation对象，如果对象存在，不需要创建。如果不存在，创建对象，将对象存进字典
- 
+ 3.使用字典存在下载操作有两个坏处:1.字典会越来越大。
+                             2.如果网络不好，图片下载失败。这时NSBlockOperation对象已经添加到字典中去了，没有办法再次下载！
+    解决办法:1.当图片下载成功后，从字典中移除下载操作
+            2.重新创建一个字典，用来保存image。
+ 4.使用字典来放入缓存图片，如果有图片，直接设置，如果没有，查看是否有下载操作，如果没有，进行下载，下载成功后，将图片添加入images字典，从operations字典中移除
  
  */
 
