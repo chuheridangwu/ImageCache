@@ -9,10 +9,11 @@
 #import "ViewController.h"
 #import "TableViewCell.h"
 #import "Model.h"
+#import "XBDownOperation.h"
 
 #define appImgFile(imgUrl) [[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:[imgUrl lastPathComponent]]
 
-@interface ViewController ()<UITableViewDataSource,UITableViewDelegate>
+@interface ViewController ()<UITableViewDataSource,UITableViewDelegate,XBDownOperationDelegate>
 {
     UITableView *_tableView;
 }
@@ -116,52 +117,20 @@
 
 - (void)downLoad:(NSString*)imageUrl indexPath:(NSIndexPath*)indexPath{
     //取出当前图片URL对应的下载操作(operation对象)
-    NSBlockOperation *operation = self.operations[imageUrl];
+    XBDownOperation *operation = self.operations[imageUrl];
     if (operation) return;
     
-    __weak typeof(self) blockSelf = self;
-        //创建操作，下载图片
-        operation = [NSBlockOperation blockOperationWithBlock:^{
-            NSURL *url = [NSURL URLWithString:imageUrl];
-            UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:url]];
-            //回到主线程
-            [[NSOperationQueue mainQueue]addOperationWithBlock:^{
-                
-                //将图片添加入缓存字典中
-                if (image) {
-                    blockSelf.images[imageUrl] = image;
-                    //将图片转化成二进制数据
-                    NSData *imgData = UIImagePNGRepresentation(image);
-                    //无损压缩;
- //                    NSData *imgData = UIImageJPEGRepresentation(image, 1.0);
-                    
-                    //获取沙盒路径，
-                    //NSCachesDirectory 获取Caches文件夹
-                    //NSUserDomainMask  去当前用户文件中找
-//                    NSString *caches = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
-//                    //拼接文件路径
-//                    NSString *fileName = [imageUrl lastPathComponent];
-//                    NSString *file = [caches stringByAppendingPathComponent:fileName];
-                    
-                    //将图片写进文件夹
-                    [imgData writeToFile:appImgFile(imageUrl) atomically:YES];
-
-                }
-                
-                //刷新单行的cell
-                [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
-                
-                //下载成功后，从字典中移除下载操作(1.防止字典越来越大，2.下载失败后可以重新下载)
-                [blockSelf.operations removeObjectForKey:imageUrl];
-            }];
-            
-        }];
-        
-        //添加操作到队列中
-        [self.queue addOperation:operation];
-        
-        //将下载操作添加到字典
-        self.operations[imageUrl] = operation;
+    //创建操作，下载图片
+    operation = [[XBDownOperation alloc] init];
+    operation.imageUrl = imageUrl;
+    operation.indexPath = indexPath;
+    operation.delegate = self;
+    
+    //添加操作到队列中
+    [self.queue addOperation:operation];
+    
+    //将下载操作添加到字典
+    self.operations[imageUrl] = operation;
    
 }
 
@@ -174,6 +143,43 @@
     //恢复下载
     [self.queue setSuspended:NO];
 }
+
+
+#warning  ----  XBDownOperationDelegate
+-(void)downImageWithOperation:(XBDownOperation *)operation image:(UIImage *)image indexPath:(NSIndexPath *)indexPath{
+    
+    //将图片添加入缓存字典中
+    if (image) {
+        self.images[operation.imageUrl] = image;
+        //将图片转化成二进制数据
+        NSData *imgData = UIImagePNGRepresentation(image);
+        //无损压缩;
+        //                    NSData *imgData = UIImageJPEGRepresentation(image, 1.0);
+        
+        //获取沙盒路径，
+        //NSCachesDirectory 获取Caches文件夹
+        //NSUserDomainMask  去当前用户文件中找
+        //                    NSString *caches = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
+        //                    //拼接文件路径
+        //                    NSString *fileName = [imageUrl lastPathComponent];
+        //                    NSString *file = [caches stringByAppendingPathComponent:fileName];
+        
+        //将图片写进文件夹
+        [imgData writeToFile:appImgFile(operation.imageUrl) atomically:YES];
+     
+    }
+    
+    //下载成功后，从字典中移除下载操作(1.防止字典越来越大，2.下载失败后可以重新下载)
+    [self.operations removeObjectForKey:operation.imageUrl];
+    
+    //刷新单行的cell
+    [_tableView reloadRowsAtIndexPaths:@[operation.indexPath] withRowAnimation:UITableViewRowAnimationNone];
+    
+
+    
+    
+}
+
 /*
  1.将下载图片的耗时操作放在子线程去做，有数据后返回主线程设置UI
  2.如何防止重复下载操作，只需要保证一张图片只下载一次.
@@ -189,6 +195,11 @@
  8.解决内存泄露问题。由于控制器对象对queue有强引用，queue内的NSBlockOperation对象对控制器又形成强引用。所以会造成内存泄露。
    并不是在block内使用self就会造成强引用，要看具体是否对控制器造成强引用
  9.将图片存进沙盒中。需要将图片转化成NSData数据。放入Library中的Caches文件夹
+ 
+ 10.自定义NSOperation，对代码进行封装!
+    注意点：1.重写- (void)main;方法，需要自己创建自动释放池@autoreleasepool；
+           2.经常通过- (void)isCancelled;方法检测操作是否被取消，对取消做出相应
+ 
  
  */
 
